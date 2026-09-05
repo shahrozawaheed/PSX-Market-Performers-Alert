@@ -1,0 +1,51 @@
+name: PSX Market Performers Alert
+
+on:
+  workflow_dispatch:
+
+  schedule:
+    - cron: '0 12 * * 1-5'
+
+permissions:
+  contents: write
+
+jobs:
+  market-performers-alert:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install requests beautifulsoup4
+
+      - name: Run market performers bot
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          python market_performers.py
+
+      - name: Save duplicate prevention data
+        run: |
+          if [ -f sent_market_performer_alerts.json ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+            git add sent_market_performer_alerts.json
+
+            if git diff --cached --quiet; then
+              echo "No new sent alerts to save."
+            else
+              git commit -m "Update market performer alerts"
+              git push
+            fi
+          else
+            echo "sent_market_performer_alerts.json does not exist because no new alerts were sent."
+          fi
