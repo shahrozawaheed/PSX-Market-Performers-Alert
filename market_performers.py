@@ -447,4 +447,3 @@ print(
     "PSX Market Performers Alert Bot Finished"
 )
 print("--------------------------------")
-```
